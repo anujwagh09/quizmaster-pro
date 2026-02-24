@@ -18,13 +18,18 @@ public class Question {
 	private Long id;
 	@Column(nullable = false, columnDefinition = "TEXT")
 	private String questionText;
+	@Column(nullable = false)
 	private String optionA;
+	@Column(nullable = false)
 	private String optionB;
+	@Column(nullable = false)
 	private String optionC;
+	@Column(nullable = false)
 	private String optionD;
+	@Column(nullable = false)
 	private String correctAnswer;
 	@ManyToOne
-    @JoinColumn(name = "quiz_id")
+    @JoinColumn(name = "quiz_id",nullable = false)
     private Quiz quiz;
 
 }
