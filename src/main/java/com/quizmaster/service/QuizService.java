@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.quizmaster.entity.Quiz;
+import com.quizmaster.exception.ResourceNotFoundException;
 import com.quizmaster.repository.QuizRepository;
-
 
 @Service
 public class QuizService {
@@ -29,7 +29,7 @@ public class QuizService {
 	}
 
 	public Quiz getQuizById(Long id) {
-		return qr.findById(id).orElseThrow(() -> new RuntimeException("Quiz not found with id: " + id));
+		return qr.findById(id).orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id: " + id));
 	}
 
 	public Quiz updateQuiz(Long id, Quiz q) {

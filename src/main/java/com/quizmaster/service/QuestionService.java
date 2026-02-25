@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.quizmaster.entity.Question;
 import com.quizmaster.entity.Quiz;
+import com.quizmaster.exception.ResourceNotFoundException;
 import com.quizmaster.repository.QuestionRepository;
 import com.quizmaster.repository.QuizRepository;
 
@@ -19,7 +20,7 @@ public class QuestionService {
 	private QuizRepository quizRepo;
 	
 	public Question addQuestion(Long id,Question q) {
-		Quiz qz=quizRepo.findById(id).orElseThrow(()->new RuntimeException("No Quiz found"));
+		Quiz qz=quizRepo.findById(id).orElseThrow(()->new ResourceNotFoundException("Quiz not found with id: " + id));
 		Question que=new Question();
 		que.setQuestionText(q.getQuestionText());
 		que.setOptionA(q.getOptionA());
@@ -39,7 +40,7 @@ public class QuestionService {
     }
 	
 	 public Question updateQuestion(Long id, Question q) {
-	        Question question = qr.findById(id).orElseThrow(() -> new RuntimeException("Question not found with id: " + id));
+	        Question question = qr.findById(id).orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + id));
 
 	        question.setQuestionText(q.getQuestionText());
 	        question.setOptionA(q.getOptionA());
