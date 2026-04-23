@@ -19,10 +19,7 @@ public class QuizController {
         return qs.createQuiz(q);
     }
 
-    @GetMapping("/all")
-    public List<Quiz> getAllQuiz() {
-        return qs.getAllQuiz();
-    }
+  
 
     @GetMapping("/{id}")
     public Quiz getQuizById(@PathVariable Long id) {
