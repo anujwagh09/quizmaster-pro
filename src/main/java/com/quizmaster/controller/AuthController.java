@@ -31,7 +31,7 @@ public class AuthController {
         return ResponseEntity.ok("User registered successfully");
     }
 
-    // LOGIN
+    
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
         String email    = request.get("email");
@@ -48,10 +48,12 @@ public class AuthController {
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+
         return ResponseEntity.ok(Map.of(
-        	    "token", token,
-        	    "role",  user.getRole(),   // no .name() needed
-        	    "email", user.getEmail()
-        	));
+            "token",  token,
+            "role",   user.getRole(),
+            "email",  user.getEmail(),
+            "userId", user.getId()    
+        ));
     }
 }
