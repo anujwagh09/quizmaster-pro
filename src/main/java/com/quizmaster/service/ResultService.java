@@ -1,11 +1,8 @@
 package com.quizmaster.service;
 
 import java.util.List;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.quizmaster.dto.SubmitRequestDTO;
 import com.quizmaster.dto.SubmitResponseDTO;
 import com.quizmaster.entity.Question;
@@ -20,57 +17,63 @@ import com.quizmaster.repository.UserRepository;
 
 @Service
 public class ResultService {
-	@Autowired
-	private ResultRepository resultRepo;
-	@Autowired
-	private QuestionRepository questionRepo;
-	@Autowired
-	private QuizRepository quizRepo;
-	@Autowired
-	private UserRepository userRepo;
 
-	public SubmitResponseDTO submitQuiz(SubmitRequestDTO sreq) {
-		Quiz q = quizRepo.findById(sreq.getQuizId())
-				.orElseThrow(() -> new ResourceNotFoundException("Quiz not found "));
-		User u = userRepo.findById(sreq.getUserId()).orElseThrow(() ->new ResourceNotFoundException("User not found " ));
+    @Autowired
+    private ResultRepository resultRepo;
+    @Autowired
+    private QuestionRepository questionRepo;
+    @Autowired
+    private QuizRepository quizRepo;
+    @Autowired
+    private UserRepository userRepo;
 
-		List<Question> questions = questionRepo.findByQuizId(sreq.getQuizId());
+    public SubmitResponseDTO submitQuiz(SubmitRequestDTO sreq) {
 
-		int score = 0;
-		Map<Long, String> userAnswer = sreq.getAnswers();
+        Quiz q = quizRepo.findById(sreq.getQuizId())
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
-		for (Question question : questions) {
-			String userAns = userAnswer.get(question.getId());
-			System.out.println("Q ID: " + question.getId() + " | Correct: " + question.getCorrectAnswer()
-					+ " | User Answer: " + userAnswer);
-			if (userAns != null && userAns.equalsIgnoreCase(question.getCorrectAnswer()))
-				score++;
+        User u = userRepo.findById(sreq.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-		}
+        List<Question> questions = questionRepo.findByQuizId(sreq.getQuizId());
 
-		Result result = new Result();
-		result.setQuiz(q);
-		result.setUser(u);
-		result.setScore(score);
-		result.setTotalQuestions(questions.size());
-		result.setTimeTaken(sreq.getTimeTaken());
-		resultRepo.save(result);
+        int score = 0;
 
-		SubmitResponseDTO response = new SubmitResponseDTO();
-		response.setScore(score);
-		response.setTotalQuestions(questions.size());
-		response.setTimeTaken(sreq.getTimeTaken());
-		response.setMessage("You scored " + score + " out of " + questions.size());
+        // ← convert List to Map for easy lookup
+        java.util.Map<Long, String> answerMap = new java.util.HashMap<>();
+        if (sreq.getAnswers() != null) {
+            for (SubmitRequestDTO.AnswerDTO a : sreq.getAnswers()) {
+                answerMap.put(a.getQuestionId(), a.getSelectedOption());
+            }
+        }
 
-		return response;
+        for (Question question : questions) {
+            String userAns = answerMap.get(question.getId());
+            if (userAns != null && userAns.equalsIgnoreCase(question.getCorrectAnswer()))
+                score++;
+        }
 
-	}
+        Result result = new Result();
+        result.setQuiz(q);
+        result.setUser(u);
+        result.setScore(score);
+        result.setTotalQuestions(questions.size());
+        result.setTimeTaken(sreq.getTimeTaken());
+        resultRepo.save(result);
 
-	public List<Result> getLeaderboard(Long quizId) {
-		return resultRepo.findByQuizIdOrderByScoreDescTimeTakenAsc(quizId);
-	}
+        SubmitResponseDTO response = new SubmitResponseDTO();
+        response.setScore(score);
+        response.setTotalQuestions(questions.size());
+        response.setTimeTaken(sreq.getTimeTaken());
+        response.setMessage("You scored " + score + " out of " + questions.size());
+        return response;
+    }
 
-	public List<Result> getMyResults(Long userId) {
-		return resultRepo.findByUserId(userId);
-	}
+    public List<Result> getLeaderboard(Long quizId) {
+        return resultRepo.findByQuizIdOrderByScoreDescTimeTakenAsc(quizId);
+    }
+
+    public List<Result> getMyResults(Long userId) {
+        return resultRepo.findByUserId(userId);
+    }
 }
