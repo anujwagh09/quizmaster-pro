@@ -3,6 +3,7 @@ package com.quizmaster.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -27,14 +28,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults())        // ← ADD THIS
+            .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/quiz/**").hasRole("ADMIN")
-                .requestMatchers("/api/question/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/quiz/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/question/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/leaderboard/**").authenticated()
+                .requestMatchers("/api/attempt/**").authenticated()
+                .requestMatchers(HttpMethod.POST,   "/api/quiz/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT,    "/api/quiz/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/quiz/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,   "/api/question/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/question/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -43,7 +51,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {   // ← ADD THIS WHOLE BEAN
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
