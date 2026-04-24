@@ -1,6 +1,9 @@
 package com.quizmaster.service;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,12 +39,16 @@ public class ResultService {
 
     public SubmitResponseDTO submitQuiz(SubmitRequestDTO sreq) {
 
+        if (sreq == null) {
+            throw new RuntimeException("Request body is missing");
+        }
+
         if (sreq.getQuizId() == null) {
             throw new RuntimeException("Quiz ID is required");
         }
 
-        if (sreq.getAnswers() == null) {
-            throw new RuntimeException("Answers cannot be null");
+        if (sreq.getAnswers() == null || sreq.getAnswers().isEmpty()) {
+            throw new RuntimeException("Answers cannot be null or empty");
         }
 
         Quiz q = quizRepo.findById(sreq.getQuizId())
@@ -62,14 +69,20 @@ public class ResultService {
 
         int score = 0;
 
-        java.util.Map<Long, String> answerMap = new java.util.HashMap<>();
+        Map<Long, String> answerMap = new HashMap<>();
+
         for (SubmitRequestDTO.AnswerDTO a : sreq.getAnswers()) {
+            if (a == null || a.getQuestionId() == null || a.getSelectedOption() == null) {
+                throw new RuntimeException("Invalid answer data");
+            }
             answerMap.put(a.getQuestionId(), a.getSelectedOption());
         }
 
         for (Question question : questions) {
             String userAns = answerMap.get(question.getId());
-            if (userAns != null && userAns.equalsIgnoreCase(question.getCorrectAnswer())) {
+            if (userAns != null &&
+                question.getCorrectAnswer() != null &&
+                userAns.equalsIgnoreCase(question.getCorrectAnswer())) {
                 score++;
             }
         }
